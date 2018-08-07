@@ -43,10 +43,11 @@ let rec walk_directory_tree = path : file_item => {
     switch (Unix.readdir(current_dir_handle)) {
     | exception End_of_file => break := true
     | item =>
-      let item_stats: Unix.stats = Unix.stat(path.full_path ++ "/" ++ item);
-      switch (item_stats.st_kind) {
+      let item_stats: Unix.stats =
+        Unix.stat(Filename.concat(path.full_path, item));
+      switch ((item_stats.st_kind: Unix.file_kind)) {
       | Unix.S_REG =>
-        let full_path = path.full_path ++ "/" ++ item;
+        let full_path = Filename.concat(path.full_path, item);
         contents :=
           Array.append(contents^, [|File({full_path, name: item})|]);
         ignore();
@@ -55,7 +56,7 @@ let rec walk_directory_tree = path : file_item => {
         | "."
         | ".." => ignore()
         | sub_dir_name =>
-          let full_path = path.full_path ++ "/" ++ sub_dir_name;
+          let full_path = Filename.concat(path.full_path, sub_dir_name);
           let sub_dir = walk_directory_tree({full_path, name: sub_dir_name});
           contents := Array.append(contents^, [|sub_dir|]);
           ignore();
