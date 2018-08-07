@@ -18,20 +18,33 @@ let print_dir_with_pipes = (dirname, level) =>
     |> print_endline
   };
 
-let rec print_directory_at_level = (file_item, level) =>
-  switch (file_item) {
-  | File({full_path: _, name: filename}) =>
-    print_dir_with_pipes(filename, level)
-  | Directory({full_path: _, name: dirname}, [||]) =>
-    print_dir_with_pipes(dirname, level)
-  | Directory({full_path: _, name: dirname}, contents) =>
-    print_dir_with_pipes(dirname, level);
-    let print_sub_dir = file_item =>
-      print_directory_at_level(file_item, level + 1);
-    Array.iter(print_sub_dir, contents);
+let rec print_directory_at_level = (file_items: list(file_item), level: int) =>
+  switch (file_items) {
+  | [file_item] =>
+    switch (file_item) {
+    | File({full_path: _, name: filename}) =>
+      print_dir_with_pipes(filename, level)
+    | Directory({full_path: _, name: dirname}, [||]) =>
+      print_dir_with_pipes(dirname, level)
+    | Directory({full_path: _, name: dirname}, contents) =>
+      print_dir_with_pipes(dirname, level);
+      print_directory_at_level(Array.to_list(contents), level + 1);
+    }
+  | [file_item, ...rest] =>
+    switch (file_item) {
+    | File({full_path: _, name: filename}) =>
+      print_dir_with_pipes(filename, level)
+    | Directory({full_path: _, name: dirname}, [||]) =>
+      print_dir_with_pipes(dirname, level)
+    | Directory({full_path: _, name: dirname}, contents) =>
+      print_dir_with_pipes(dirname, level);
+      print_directory_at_level(Array.to_list(contents), level + 1);
+    };
+    print_directory_at_level(rest, level);
+  | _ => ignore()
   };
 
-let print_directory = file_item => print_directory_at_level(file_item, 0);
+let print_directory = file_item => print_directory_at_level([file_item], 0);
 
 let rec walk_directory_tree = path : file_item => {
   let current_dir_handle = Unix.opendir(path.full_path);
