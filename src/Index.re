@@ -7,37 +7,39 @@ type file_item =
   | File(path)
   | Directory(path, array(file_item));
 
-let print_dir_with_pipes = (dirname, level) =>
+let print_dir_with_pipes = (dirname, level, ~last) => {
+  let pipe_style = last ? "└── " : "├── ";
+
   switch (level) {
   | 0 => print_endline(dirname)
-  | 1 => print_endline("└── " ++ dirname)
+  | 1 => print_endline(pipe_style ++ dirname)
   | num =>
-    String.make((num - 1) * 4, ' ')
-    ++ "└── "
-    ++ dirname
-    |> print_endline
+    String.make((num - 1) * 4, ' ') ++ pipe_style ++ dirname |> print_endline
   };
+};
 
-let rec print_directory_at_level = (file_items: list(file_item), level: int) =>
+let rec print_directory_at_level =
+        (file_items: list(file_item), level: int)
+        : unit =>
   switch (file_items) {
   | [file_item] =>
     switch (file_item) {
     | File({full_path: _, name: filename}) =>
-      print_dir_with_pipes(filename, level)
+      print_dir_with_pipes(filename, level, ~last=true)
     | Directory({full_path: _, name: dirname}, [||]) =>
-      print_dir_with_pipes(dirname, level)
+      print_dir_with_pipes(dirname, level, ~last=true)
     | Directory({full_path: _, name: dirname}, contents) =>
-      print_dir_with_pipes(dirname, level);
+      print_dir_with_pipes(dirname, level, ~last=true);
       print_directory_at_level(Array.to_list(contents), level + 1);
     }
   | [file_item, ...rest] =>
     switch (file_item) {
     | File({full_path: _, name: filename}) =>
-      print_dir_with_pipes(filename, level)
+      print_dir_with_pipes(filename, level, ~last=false)
     | Directory({full_path: _, name: dirname}, [||]) =>
-      print_dir_with_pipes(dirname, level)
+      print_dir_with_pipes(dirname, level, ~last=false)
     | Directory({full_path: _, name: dirname}, contents) =>
-      print_dir_with_pipes(dirname, level);
+      print_dir_with_pipes(dirname, level, ~last=false);
       print_directory_at_level(Array.to_list(contents), level + 1);
     };
     print_directory_at_level(rest, level);
