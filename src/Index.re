@@ -87,8 +87,7 @@ let rec walk_directory_tree = path : file_item => {
 };
 
 let run = () => {
-  let path_parts = Str.split(Str.regexp("/"), Unix.getcwd());
-  let basename = List.nth(path_parts, List.length(path_parts) - 1);
+  let basename = Filename.basename(Unix.getcwd());
   walk_directory_tree({full_path: Unix.getcwd(), name: basename})
   |> print_directory;
 };
